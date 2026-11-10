@@ -1,4 +1,4 @@
-# EC3+Spectrocatalysis Group's Lab Inventory
+# EC3 + Spectrocatalysis Lab Gas Cylinder Inventory
 
 A shared, live board of the lab's gas cylinders: what we have, where it is, what's running low, and what has been ordered.
 
