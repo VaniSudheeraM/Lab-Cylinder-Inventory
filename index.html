@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Cylinder Status Board</title>
+<title>EC3+Spectrocatalysis Lab Inventory</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -87,6 +87,7 @@ header.top{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-end;justif
 .corridor{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;background:repeating-linear-gradient(135deg,var(--sunk) 0 8px,transparent 8px 16px);border:1px dashed var(--line);border-radius:var(--r);padding:8px;position:relative}
 .corridor .clabel{position:absolute;left:50%;top:-8px;transform:translateX(-50%);background:var(--surface);padding:0 8px;font:500 10.5px/16px var(--f-mono);letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
 .zone{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);padding:10px;text-align:left;cursor:pointer;display:grid;gap:7px;align-content:start;min-height:110px;min-width:0}
+.zone.wide{grid-column:span 2}
 .zone.room{border-width:2px;border-color:color-mix(in srgb,var(--ink) 30%,var(--line))}
 .zone:hover{border-color:var(--brass)}
 .zone[aria-pressed="true"]{border-color:var(--brass);background:var(--brass-weak)}
@@ -228,6 +229,15 @@ label.f input,label.f select,label.f textarea{padding:7px 9px;border:1px solid v
 .avs .ini:first-child,.me .ini,.act .ini{margin-left:0}
 .pinin{font:600 22px/1 var(--f-mono);letter-spacing:.4em;text-align:center}
 .banner{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--brass-weak);color:var(--brass-ink);border:1px solid color-mix(in srgb,var(--brass) 40%,transparent);border-radius:var(--r);padding:10px 14px;font-size:13.5px}
+footer a{color:var(--brass)}
+.gate{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:32px 24px;display:grid;gap:12px;justify-items:start;max-width:620px}
+.gate h2{font-size:22px}
+.gate p{margin:0;color:var(--muted);max-width:60ch}
+.gate a{color:var(--brass)}
+body:not(.locked) #gate{display:none}
+body.locked .wrap > :not(header):not(#gate):not(footer){display:none!important}
+body.locked .actions, body.locked #here, body.locked #lastupd{display:none!important}
+.credits{padding-top:8px;margin-top:4px;border-top:1px solid var(--line)}
 footer{font-size:12px;color:var(--muted);display:grid;gap:4px}
 @media (prefers-reduced-motion:no-preference){.zone,.count,.btn{transition:background-color .12s,border-color .12s}}
 </style>
@@ -238,7 +248,7 @@ footer{font-size:12px;color:var(--muted);display:grid;gap:4px}
   <header class="top">
     <div class="titlebox">
       <span class="eyebrow">Gas cylinder register</span>
-      <div class="titlerow" id="titlerow"><h1 id="labTitle">Gas Cylinder Status</h1></div>
+      <div class="titlerow" id="titlerow"><h1 id="labTitle">EC3+Spectrocatalysis Group&#39;s Lab Inventory</h1></div>
       <div class="sub">
         <span id="conn"><span class="dot"></span>Connecting to the shared register…</span>
         <span id="lastupd"></span>
@@ -259,7 +269,13 @@ footer{font-size:12px;color:var(--muted);display:grid;gap:4px}
     </div>
   </header>
 
-  <div class="banner" id="lockBanner" hidden><span>You’re viewing the register. Log in with the lab PIN to update cylinders and requests.</span><button class="btn small primary" type="button" id="btnUnlock2">Log in</button></div>
+  <section class="gate" id="gate">
+    <span class="eyebrow">Members only</span>
+    <h2 id="gateTitle">EC3+Spectrocatalysis Group’s Lab Inventory</h2>
+    <p>This inventory is for lab members. Log in with your name and the lab PIN to see and update the gas cylinders.</p>
+    <div><button class="btn primary" type="button" id="btnGate">Log in</button></div>
+    <p class="note">Don’t have the PIN? Email <a href="mailto:ch23d405@smail.iitm.ac.in">ch23d405@smail.iitm.ac.in</a></p>
+  </section>
 
   <section class="counts" id="counts" aria-label="Cylinder counts by status"></section>
 
@@ -299,6 +315,7 @@ footer{font-size:12px;color:var(--muted);display:grid;gap:4px}
       <select id="fGas" aria-label="Gas"><option value="">All gases</option></select>
       <select id="fOwn" aria-label="Rent or own"><option value="">Rent + own</option><option>Rent</option><option>Own</option></select>
       <select id="fSup" aria-label="Supplier"><option value="">All suppliers</option></select>
+      <select id="fLoc" aria-label="Location"><option value="">All locations</option></select>
       <select id="fLine" aria-label="Line connection"><option value="">Any line</option><option value="1">Connected</option><option value="0">Not connected</option></select>
     </div>
     <div class="activef" id="activef"></div>
@@ -335,6 +352,7 @@ footer{font-size:12px;color:var(--muted);display:grid;gap:4px}
   <footer>
     <span>Changes save to the lab’s Google Sheet and show up for everyone within about 20 seconds. Hazard groups (FLAM, TOX, OXID, INERT) are guessed from the gas name; always check the cylinder label and SDS.</span>
     <span>Size: B = big cylinder, S = small. Idle = "Not in use".</span>
+    <span class="credits">Questions or problems with this board? Email <a href="mailto:ch23d405@smail.iitm.ac.in">ch23d405@smail.iitm.ac.in</a> · Built with the help of <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a> by Anthropic.</span>
   </footer>
 </div>
 
@@ -426,10 +444,14 @@ const STATUSES = [
   {key:"Empty", cls:"empty", color:"var(--s-empty)"},
 ];
 const ST = Object.fromEntries(STATUSES.map(s => [s.key, s]));
-const ZONES = [ // schematic slots: rooms on top, corridor below
-  {key:"Inside 403", label:"Room 403", room:true}, {key:"Inside 404", label:"Room 404", room:true}, {key:"Inside 413", label:"Room 413", room:true},
-  {key:"Outside 403", label:"Outside 403"}, {key:"Outside 404", label:"Outside 404"}, {key:"Outside 413", label:"Outside 413"},
+const ZONES = [ // schematic slots: rooms on top, corridor below. "aliases" = location names that count as this spot
+  {id:"in403", key:"Inside 403", label:"Room 403", room:true, aliases:["inside 403"]},
+  {id:"in404", key:"Inside 404", label:"Room 404", room:true, aliases:["inside 404"]},
+  {id:"in413", key:"Inside 413", label:"Room 413", room:true, aliases:["inside 413"]},
+  {id:"out403-404", key:"Outside 404", label:"Outside 403 / 404", wide:true, aliases:["outside 403","outside 404","outside 403/404","outside 403 / 404","outside 404/403"]},
+  {id:"out413", key:"Outside 413", label:"Outside 413", aliases:["outside 413"]},
 ];
+const locId = loc => { const k = String(loc ?? "").trim().replace(/\s+/g," ").toLowerCase(); const z = ZONES.find(z => z.aliases.includes(k)); return z ? z.id : k; };
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const norm = s => String(s ?? "").trim().replace(/\s+/g, " ");
@@ -459,6 +481,7 @@ const S = {
 // ===== CONFIG: paste your Google Apps Script web app URL here =====
 const API_URL = "https://script.google.com/macros/s/AKfycbwlKmPDfzKc1-REwnYOJQFrbxhdl8VJ-nDjVKXTL9hWOBQmAPoJiq6IEthltilXY15-lA/exec";
 const POLL_MS = 20000;
+const DEFAULT_TITLE = "EC3+Spectrocatalysis Group’s Lab Inventory";
 // ==================================================================
 const LOCK_SVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>';
 const OPEN_SVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 4.9-.7"/></svg>';
@@ -512,7 +535,7 @@ function filtered(){
   const f = S.f, q = f.q.trim().toLowerCase();
   return list().filter(c => {
     if (f.status && c.status !== f.status) return false;
-    if (f.loc && locKey(c.location) !== f.loc) return false;
+    if (f.loc && locId(c.location) !== f.loc) return false;
     if (f.gas && gasKey(c.gas) !== f.gas) return false;
     if (f.own && (c.own||"").toLowerCase() !== f.own.toLowerCase()) return false;
     if (f.sup && (c.supplier||"").toUpperCase() !== f.sup) return false;
@@ -535,17 +558,17 @@ function zoneHTML(z, items){
   const segs = STATUSES.map(s => { const k = items.filter(c=>c.status===s.key).length; return k ? `<i style="width:${k/n*100}%;background:${s.color}" title="${esc(s.short||s.key)}: ${k}"></i>` : ""; }).join("");
   const gases = {}; items.forEach(c => { const g = norm(c.gas)||"?"; gases[g]=(gases[g]||0)+1; });
   const chips = Object.entries(gases).sort((a,b)=>b[1]-a[1]).map(([g,k]) => `<span class="chip">${esc(g)}${k>1?` ×${k}`:""}</span>`).join("");
-  return `<button type="button" class="zone ${z.room?"room":""} ${n?"":"emptyzone"}" data-loc="${esc(locKey(z.key))}" aria-pressed="${S.f.loc===locKey(z.key)}">
+  return `<button type="button" class="zone ${z.room?"room":""} ${z.wide?"wide":""} ${n?"":"emptyzone"}" data-loc="${esc(z.id)}" aria-pressed="${S.f.loc===z.id}">
     <span class="zt"><span class="zn">${esc(z.label)}</span><span class="zc">${n}</span></span>
     ${n ? `<span class="bar">${segs}</span><span class="chips">${chips}</span>` : `<span class="note">No cylinders</span>`}</button>`;
 }
 function renderPlan(){
-  const all = list(); const at = k => all.filter(c => locKey(c.location) === locKey(k));
+  const all = list(); const at = id => all.filter(c => locId(c.location) === id);
   const rooms = ZONES.filter(z=>z.room), outs = ZONES.filter(z=>!z.room);
-  $("plan").innerHTML = rooms.map(z=>zoneHTML(z, at(z.key))).join("") +
-    `<div class="corridor"><span class="clabel">Corridor</span>${outs.map(z=>zoneHTML(z, at(z.key))).join("")}</div>`;
-  const known = new Set(ZONES.map(z=>locKey(z.key)));
-  const extras = {}; all.forEach(c => { const k = locKey(c.location); if (!known.has(k)) (extras[k] ||= {key:norm(c.location)||"No location", label:norm(c.location)||"No location", items:[]}).items.push(c); });
+  $("plan").innerHTML = rooms.map(z=>zoneHTML(z, at(z.id))).join("") +
+    `<div class="corridor"><span class="clabel">Corridor</span>${outs.map(z=>zoneHTML(z, at(z.id))).join("")}</div>`;
+  const known = new Set(ZONES.map(z=>z.id));
+  const extras = {}; all.forEach(c => { const k = locId(c.location); if (!known.has(k)) (extras[k] ||= {id:k, key:norm(c.location)||"No location", label:norm(c.location)||"No location", items:[]}).items.push(c); });
   $("extraZones").innerHTML = Object.values(extras).map(e => zoneHTML(e, e.items)).join("");
   $("legend").innerHTML = STATUSES.map(s => `<span><i style="background:${s.color}"></i>${esc(s.short||s.key)}</span>`).join("");
 }
@@ -621,7 +644,7 @@ async function renderRegister(){
 function renderActiveFilters(){
   const f=S.f, pills=[];
   if (f.status) pills.push(["status", ST[f.status]?.short||f.status]);
-  if (f.loc) pills.push(["loc", (ZONES.find(z=>locKey(z.key)===f.loc)?.label) || f.loc]);
+  if (f.loc) pills.push(["loc", (ZONES.find(z=>z.id===f.loc)?.label) || f.loc]);
   if (f.gas) pills.push(["gas", f.gas]);
   $("activef").innerHTML = pills.length ? `<span class="muted">Filtered by</span>` + pills.map(([k,l])=>`<button type="button" class="pillx" data-clear="${k}">${esc(l)} ×</button>`).join("") + `<button type="button" class="pillx" data-clear="all">Clear all</button>` : "";
 }
@@ -631,6 +654,9 @@ function fillOptions(){
   const gases = [...new Map(all.map(c=>[gasKey(c.gas), norm(c.gas)])).entries()].filter(([k])=>k).sort((a,b)=>a[1].localeCompare(b[1]));
   const sups = [...new Set(all.map(c=>(c.supplier||"").toUpperCase()).filter(Boolean))].sort();
   const locs = [...new Set([...ZONES.map(z=>z.key), ...all.map(c=>norm(c.location)).filter(Boolean)])];
+  const extraLocs = [...new Map(all.filter(c=>!ZONES.some(z=>z.id===locId(c.location))).map(c=>[locId(c.location), norm(c.location)||"No location"])).entries()];
+  $("fLoc").innerHTML = `<option value="">All locations</option>` + ZONES.map(z=>`<option value="${esc(z.id)}">${esc(z.label)}</option>`).join("") + extraLocs.map(([k,l])=>`<option value="${esc(k)}">${esc(l)}</option>`).join("");
+  $("fLoc").value = S.f.loc;
   const keep = (sel, html) => { const v = sel.value; sel.innerHTML = html; sel.value = v; };
   keep($("fGas"), `<option value="">All gases</option>` + gases.map(([k,l])=>`<option value="${esc(k)}">${esc(l)}</option>`).join(""));
   $("fGas").value = S.f.gas;
@@ -673,14 +699,14 @@ function renderIdentity(){
   $("avs").innerHTML = names.slice(0,6).map(avatar).join("");
   $("hereTxt").textContent = names.length ? (names.length===1 ? `${names[0]} is here now` : `${names.length} others here now`) : (unlocked() ? "Only you here now" : "");
   const lb = $("btnLock"); lb.hidden = false; const u = unlocked();
-  lb.className = "btn lock" + (u?"":" locked"); lb.innerHTML = (u?OPEN_SVG:LOCK_SVG) + (u?"Editing on · Lock":"Log in with lab PIN");
-  $("lockBanner").hidden = u || !S.loaded;
+  lb.className = "btn lock" + (u?"":" locked"); lb.innerHTML = (u?OPEN_SVG:LOCK_SVG) + (u?"Log out":"Log in");
   }
 
 function renderTitle(){
-  const t = S.meta.title || "Gas Cylinder Status";
+  const t = (S.meta.title && S.meta.title !== "Gas Cylinder Status") ? S.meta.title : DEFAULT_TITLE;
   if (!$("labTitleInput")) $("labTitle").textContent = t;
-  document.title = t === "Gas Cylinder Status" ? "Cylinder Status Board" : t;
+  document.title = t === DEFAULT_TITLE ? "EC3+Spectrocatalysis Lab Inventory" : t;
+  const gt = $("gateTitle"); if (gt) gt.textContent = t;
 }
 function renderAll(){ renderTitle(); renderCounts(); renderPlan(); renderStock(); fillOptions(); renderActiveFilters(); renderRegister(); renderRequests(); renderActivity(); renderIdentity();
   document.querySelectorAll("[data-w]").forEach(b => b.hidden = !editable()); }
@@ -698,12 +724,13 @@ document.addEventListener("click", e => {
   const rq = e.target.closest("[data-rq]"); if (rq) return reqAction(rq.dataset.id, rq.dataset.rq);
 });
 document.addEventListener("change", e => { const qs = e.target.closest("[data-qs]"); if (qs) quickWrite(qs.dataset.qs, {status: qs.value}); });
-function syncInputs(){ $("q").value=S.f.q; $("fOwn").value=S.f.own; $("fSup").value=S.f.sup; $("fLine").value=S.f.line; $("fGas").value=S.f.gas; }
+function syncInputs(){ $("q").value=S.f.q; $("fOwn").value=S.f.own; $("fSup").value=S.f.sup; $("fLine").value=S.f.line; $("fGas").value=S.f.gas; $("fLoc").value=S.f.loc; }
 let qT; $("q").addEventListener("input", e => { clearTimeout(qT); qT=setTimeout(()=>{ S.f.q=e.target.value; renderRegister(); }, 120); });
 $("fGas").addEventListener("change", e => { S.f.gas=e.target.value; renderAll(); });
 $("fOwn").addEventListener("change", e => { S.f.own=e.target.value; renderRegister(); });
 $("fSup").addEventListener("change", e => { S.f.sup=e.target.value; renderRegister(); });
 $("fLine").addEventListener("change", e => { S.f.line=e.target.value; renderRegister(); });
+$("fLoc").addEventListener("change", e => { S.f.loc=e.target.value; renderAll(); });
 
 // writes
 const writing = new Set();
@@ -726,7 +753,7 @@ $("c_status").innerHTML = STATUSES.map((s,i)=>`<label><input type="radio" name="
 let delArmed = false;
 function openCyl(id, preset){
   S.editing = id || null; delArmed = false;
-  const c = id ? S.cyls.get(id) : {status:"Full", size:"B", own:"Rent", connected:false, location: S.f.loc ? (ZONES.find(z=>locKey(z.key)===S.f.loc)?.key||"") : "", ...preset};
+  const c = id ? S.cyls.get(id) : {status:"Full", size:"B", own:"Rent", connected:false, location: S.f.loc ? (ZONES.find(z=>z.id===S.f.loc)?.key||"") : "", ...preset};
   $("dlgCylTitle").textContent = id ? `Cylinder ${c.cylNo}` : "Add cylinder";
   $("c_no").value=c.cylNo||""; $("c_gas").value=c.gas||""; $("c_pur").value=c.purity||""; $("c_size").value=c.size??"B";
   $("c_loc").value=c.location||""; $("c_sup").value=c.supplier||""; $("c_own").value=(c.own||"Rent").toLowerCase()==="own"?"Own":"Rent";
@@ -873,7 +900,7 @@ $("titlerow").addEventListener("click", e => {
   const h = $("labTitle"); const inp = document.createElement("input"); inp.id="labTitleInput"; inp.value = S.meta.title || h.textContent; inp.setAttribute("aria-label","Board name");
   h.replaceWith(inp); e.target.hidden=true; inp.focus(); inp.select();
   const done = async save => {
-    const v = norm(inp.value); const nh = document.createElement("h1"); nh.id="labTitle"; nh.textContent = (save && v) || S.meta.title || "Gas Cylinder Status"; inp.replaceWith(nh); $("btnRename").hidden=false;
+    const v = norm(inp.value); const nh = document.createElement("h1"); nh.id="labTitle"; nh.textContent = (save && v) || S.meta.title || DEFAULT_TITLE; inp.replaceWith(nh); $("btnRename").hidden=false;
     if (save && v && v !== S.meta.title){ try { await S.db.doc("meta/settings").set({...S.meta, title:v}); } catch(err){ handleWriteErr(err); } }
   };
   inp.addEventListener("keydown", ev => { if (ev.key==="Enter") done(true); if (ev.key==="Escape") done(false); });
@@ -888,9 +915,14 @@ function setMode(){
 
 // ---------- PIN login ----------
 function openPin(){ $("p_pin").value=""; $("p_name").value=S.myName||""; $("p_err").hidden=true; $("dlgPin").showModal(); setTimeout(()=>$(S.myName?"p_pin":"p_name").focus(),0); }
-function lockNow(){ lsSet("cyl-pin", null); renderAll(); setMode(); }
+function setLocked(){ document.body.classList.toggle("locked", !unlocked()); }
+function lockNow(){
+  lsSet("cyl-pin", null);
+  S.cyls = new Map(); S.reqs = new Map(); S.here = []; S.loaded = false; settled = false; clearTimeout(pollT);
+  setLocked(); $("conn").innerHTML = `<span class="dot"></span>Logged out`; renderAll(); setMode();
+}
 $("btnLock").addEventListener("click", () => { if (unlocked()){ lockNow(); toast("Logged out on this browser"); } else openPin(); });
-$("btnUnlock2").addEventListener("click", openPin);
+$("btnGate").addEventListener("click", openPin);
 $("p_cancel").addEventListener("click", () => $("dlgPin").close());
 $("formPin").addEventListener("submit", async e => {
   e.preventDefault();
@@ -900,7 +932,7 @@ $("formPin").addEventListener("submit", async e => {
     const r = await callApi({action:"checkPin", pin, name});
     if (!r.ok){ err.textContent = r.code==="bad_pin" ? "That PIN isn’t right. Ask the lab in-charge for the current PIN." : (r.error||"Couldn’t check the PIN."); err.hidden=false; $("p_pin").select(); return; }
     lsSet("cyl-pin", pin); lsSet("cyl-name", name); S.myName = name; S.uid = name;
-    $("dlgPin").close(); toast(`Logged in as ${name}`); renderAll(); setMode(); poll();
+    $("dlgPin").close(); toast(`Logged in as ${name}`); setLocked(); $("conn").innerHTML = `<span class="dot"></span>Loading the register…`; renderAll(); setMode(); poll();
   } catch(x) { err.textContent="Couldn’t reach the server. " + (x && x.message || ""); err.hidden=false; }
 });
 
@@ -909,7 +941,7 @@ function sayEditing(id){ S.editingNow = id || null; }
 $("dlgCyl").addEventListener("close", () => sayEditing(null));
 
 // ---------- live sync (polling) ----------
-let settled = false;
+var settled = false;
 function applySnapshot(j){
   const prev = S.cyls;
   const next = new Map((j.cylinders||[]).map(c => [c.id, c]));
@@ -930,12 +962,14 @@ function applySnapshot(j){
   $("conn").innerHTML = `<span class="dot live"></span>Live · updated ${new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})}`;
   renderAll(); setMode();
 }
-let pollT, inflight = false;
+var pollT, inflight = false;
 async function poll(){
   clearTimeout(pollT);
+  if (!unlocked()){ setLocked(); $("conn").innerHTML = `<span class="dot"></span>Log in to see the register`; return; }
   if (inflight) return; inflight = true;
   try { applySnapshot(await api("list", {editing: S.editingNow || null})); }
   catch(e){
+    if (e.code === "bad_pin"){ inflight = false; lockNow(); toast("Please log in again. The lab PIN has changed."); return; }
     S.offline = !S.loaded;
     $("conn").innerHTML = e.code==="no_api" ? `<span class="dot warn"></span>Not set up yet: paste your Apps Script URL into API_URL in index.html.`
       : `<span class="dot warn"></span>Can’t reach the register right now. Retrying… <span class="note">(${esc(e.message||e.code||"")})</span>`;
@@ -947,7 +981,7 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden) poll
 // ---------- boot ----------
 S.db = dbShim; S.canWrite = true; S.canAdmin = false;
 S.myName = lsGet("cyl-name") || ""; S.uid = S.myName;
-renderAll(); poll();
+setLocked(); renderAll(); poll();
 })();
 </script>
 

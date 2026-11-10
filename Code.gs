@@ -27,7 +27,7 @@ function setup() {
   let st = ss.getSheetByName("Settings") || ss.insertSheet("Settings");
   if (st.getLastRow() < 2) {
     st.getRange("A:B").setNumberFormat("@");
-    st.getRange(1, 1, 3, 2).setValues([["key","value"],["title","Gas Cylinder Status"],["pin", DEFAULT_PIN]]);
+    st.getRange(1, 1, 3, 2).setValues([["key","value"],["title","EC3+Spectrocatalysis Group's Lab Inventory"],["pin", DEFAULT_PIN]]);
     st.getRange(1, 1, 1, 2).setFontWeight("bold");
   }
   const cyl = ss.getSheetByName("Cylinders");
@@ -45,7 +45,7 @@ function setup() {
 // The board sends every request as GET ?q=<json> (most reliable across browsers).
 function doGet(e) {
   const q = e && e.parameter && e.parameter.q;
-  if (!q) return json_(snapshot_({}));
+  if (!q) return json_({ ok:false, code:"bad_pin", error:"Log in with the lab PIN to see the register" });
   let b = {};
   try { b = JSON.parse(q); } catch (err) { return json_({ ok:false, code:"bad_request", error:"Bad request" }); }
   return handle_(b);
@@ -59,8 +59,9 @@ function doPost(e) {
 function handle_(b) {
   const name = String(b.name || "").slice(0, 60).trim();
   try {
-    if (b.action === "list") return json_(snapshot_({ name, editing: b.editing }));
+    // Every request, including reading the list, needs the lab PIN.
     if (String(b.pin || "") !== setting_("pin")) { Utilities.sleep(400); return json_({ ok:false, code:"bad_pin", error:"Wrong lab PIN" }); }
+    if (b.action === "list") return json_(snapshot_({ name, editing: b.editing }));
     if (b.action === "checkPin") return json_({ ok:true });
     const lock = LockService.getScriptLock(); lock.waitLock(15000);
     try {
