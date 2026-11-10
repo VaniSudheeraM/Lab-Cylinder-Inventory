@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>EC3 + Spectrocatalysis Lab Gas Cylinder Inventory</title>
+<script>try{var t=localStorage.getItem("cyl-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -230,6 +231,8 @@ label.f input,label.f select,label.f textarea{padding:7px 9px;border:1px solid v
 .pinin{font:600 22px/1 var(--f-mono);letter-spacing:.4em;text-align:center}
 .banner{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--brass-weak);color:var(--brass-ink);border:1px solid color-mix(in srgb,var(--brass) 40%,transparent);border-radius:var(--r);padding:10px 14px;font-size:13.5px}
 footer a{color:var(--brass)}
+.btn.theme{display:inline-flex;align-items:center;gap:6px}
+.btn.theme svg{width:15px;height:15px}
 .gate{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:32px 24px;display:grid;gap:12px;justify-items:start;max-width:620px}
 .gate h2{font-size:22px}
 .gate p{margin:0;color:var(--muted);max-width:60ch}
@@ -258,6 +261,7 @@ footer{font-size:12px;color:var(--muted);display:grid;gap:4px}
     <div class="idbar">
       <div class="here" id="here" hidden><span class="avs" id="avs"></span><span id="hereTxt"></span></div>
       <div class="me" id="me" hidden></div>
+      <button class="btn theme" type="button" id="btnTheme" aria-label="Switch light or dark mode"></button>
       <button class="btn lock" type="button" id="btnLock" hidden></button>
     </div>
     <div class="actions">
@@ -425,7 +429,7 @@ footer{font-size:12px;color:var(--muted);display:grid;gap:4px}
   <form id="formPin" novalidate>
     <h2>Lab PIN</h2>
     <p class="note" style="margin:0">Changes are shared with everyone in the lab. Enter your name and the lab PIN once to turn on editing in this browser. Your name is shown on every change you make.</p>
-    <label class="f">Your name<input id="p_name" autocomplete="name" placeholder="e.g. Sudheera"></label>
+    <label class="f">Your name<input id="p_name" autocomplete="name" placeholder="Enter your full name"></label>
     <label class="f">PIN<input id="p_pin" class="pinin" type="password" inputmode="numeric" autocomplete="off" maxlength="12"></label>
     <div class="err" id="p_err" hidden></div>
     <div class="dfoot"><div class="r"><button class="btn" type="button" id="p_cancel">Cancel</button><button class="btn primary" type="submit">Continue</button></div></div>
@@ -912,6 +916,26 @@ function setMode(){
   if (S.offline){ m.hidden=false; m.textContent="Not connected"; return; }
   m.hidden = editable(); m.textContent = "View only";
 }
+
+// ---------- light / dark ----------
+const THEME_ICONS = {
+  auto:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path d="M8 2.5v11a5.5 5.5 0 0 0 0-11z" fill="currentColor"/></svg>',
+  light:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6 13 13M3 13l1.4-1.4M11.6 4.4 13 3"/></svg>',
+  dark:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M13.5 9.5A5.5 5.5 0 1 1 6.5 2.5a4.5 4.5 0 0 0 7 7z"/></svg>',
+};
+const THEME_LABEL = {auto:"Auto", light:"Light", dark:"Dark"};
+function currentTheme(){ const t = lsGet("cyl-theme"); return t==="light"||t==="dark" ? t : "auto"; }
+function applyTheme(t){
+  if (t==="auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.setAttribute("data-theme", t);
+  const b = $("btnTheme"); b.innerHTML = THEME_ICONS[t] + THEME_LABEL[t];
+  b.title = t==="auto" ? "Following your device setting. Click for light." : t==="light" ? "Light mode. Click for dark." : "Dark mode. Click to follow your device.";
+}
+$("btnTheme").addEventListener("click", () => {
+  const next = {auto:"light", light:"dark", dark:"auto"}[currentTheme()];
+  lsSet("cyl-theme", next==="auto" ? null : next); applyTheme(next);
+  toast(next==="auto" ? "Following your device’s light/dark setting" : `${THEME_LABEL[next]} mode`);
+});
+applyTheme(currentTheme());
 
 // ---------- PIN login ----------
 function openPin(){ $("p_pin").value=""; $("p_name").value=S.myName||""; $("p_err").hidden=true; $("dlgPin").showModal(); setTimeout(()=>$(S.myName?"p_pin":"p_name").focus(),0); }
