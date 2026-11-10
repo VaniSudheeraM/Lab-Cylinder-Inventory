@@ -457,7 +457,7 @@ const S = {
 };
 
 // ===== CONFIG: paste your Google Apps Script web app URL here =====
-const API_URL = "PASTE_YOUR_WEB_APP_URL_HERE";
+const API_URL = "https://script.google.com/macros/s/AKfycbwlKmPDfzKc1-REwnYOJQFrbxhdl8VJ-nDjVKXTL9hWOBQmAPoJiq6IEthltilXY15-lA/exec";
 const POLL_MS = 20000;
 // ==================================================================
 const LOCK_SVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>';
@@ -477,11 +477,18 @@ const hue = n => { let h=0; for (const ch of String(n)) h=(h*31+ch.charCodeAt(0)
 const avatar = n => `<span class="ini" style="--h:${hue(n)}" title="${esc(n)}">${esc(initials(n))}</span>`;
 
 // ----- backend calls (Google Apps Script) -----
+async function callApi(body){
+  const url = API_URL + (API_URL.includes("?") ? "&" : "?") + "q=" + encodeURIComponent(JSON.stringify(body)) + "&t=" + Date.now();
+  let res;
+  try { res = await fetch(url, {method:"GET", redirect:"follow", cache:"no-store"}); }
+  catch (e) { throw {code:"network", message:"The browser couldn’t reach Google (" + (e && e.message || e) + ")"}; }
+  const text = await res.text();
+  try { return JSON.parse(text); }
+  catch { throw {code:"bad_response", message:"Google sent back a page instead of data (HTTP " + res.status + "). Check the deployment is a new version with access set to Anyone."}; }
+}
 async function api(action, payload={}){
   if (!API_URL || API_URL.startsWith("PASTE")) throw {code:"no_api", message:"API_URL is not set"};
-  const res = await fetch(API_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"},
-    body: JSON.stringify({action, pin: lsGet("cyl-pin")||"", name: S.myName||"", ...payload})});
-  const j = await res.json();
+  const j = await callApi({action, pin: lsGet("cyl-pin")||"", name: S.myName||"", ...payload});
   if (!j.ok) throw {code: j.code||"error", message: j.error||"Request failed"};
   return j;
 }
@@ -890,11 +897,11 @@ $("formPin").addEventListener("submit", async e => {
   const pin = $("p_pin").value.trim(), name = norm($("p_name").value), err = $("p_err");
   if (!name){ err.textContent="Enter your name so others can see who made each change."; err.hidden=false; return; }
   try {
-    const r = await fetch(API_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify({action:"checkPin", pin, name})}).then(r=>r.json());
+    const r = await callApi({action:"checkPin", pin, name});
     if (!r.ok){ err.textContent = r.code==="bad_pin" ? "That PIN isn’t right. Ask the lab in-charge for the current PIN." : (r.error||"Couldn’t check the PIN."); err.hidden=false; $("p_pin").select(); return; }
     lsSet("cyl-pin", pin); lsSet("cyl-name", name); S.myName = name; S.uid = name;
     $("dlgPin").close(); toast(`Logged in as ${name}`); renderAll(); setMode(); poll();
-  } catch { err.textContent="Couldn’t reach the server. Check your internet connection."; err.hidden=false; }
+  } catch(x) { err.textContent="Couldn’t reach the server. " + (x && x.message || ""); err.hidden=false; }
 });
 
 // presence: which cylinder I have open (sent with the next poll)
@@ -931,7 +938,7 @@ async function poll(){
   catch(e){
     S.offline = !S.loaded;
     $("conn").innerHTML = e.code==="no_api" ? `<span class="dot warn"></span>Not set up yet: paste your Apps Script URL into API_URL in index.html.`
-      : `<span class="dot warn"></span>Can’t reach the register right now. Retrying…`;
+      : `<span class="dot warn"></span>Can’t reach the register right now. Retrying… <span class="note">(${esc(e.message||e.code||"")})</span>`;
     if (!S.loaded){ S.loaded = true; renderAll(); } setMode();
   } finally { inflight = false; if (!document.hidden) pollT = setTimeout(poll, POLL_MS); }
 }
