@@ -1,10 +1,10 @@
-# EC3 + Spectrocatalysis Lab Gas Cylinder Inventory
+# EC3+SpectroCatalytics Lab Gas Cylinder Inventory
 
 A shared, live board of the lab's gas cylinders: what we have, where it is, what's running low, and what has been ordered.
 
 **Open the board:** https://vanisudheeram.github.io/Lab-Cylinder-Inventory/
 
-> **The lab PIN is for EC3+Spectrocatalysis lab members only.**
+> **The lab PIN is for EC3+SpectroCatalytics lab members only.**
 > Please don't share it outside the group or post it in public chats. If you need the PIN, or think it has leaked, email **ch23d405@smail.iitm.ac.in**.
 
 ---

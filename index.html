@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>EC3 + Spectrocatalysis Lab Gas Cylinder Inventory</title>
+<title>EC3+SpectroCatalytics Lab Gas Cylinder Inventory</title>
 <script>try{var t=localStorage.getItem("cyl-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -251,7 +251,7 @@ footer{font-size:12px;color:var(--muted);display:grid;gap:4px}
   <header class="top">
     <div class="titlebox">
       <span class="eyebrow">Gas cylinder register</span>
-      <div class="titlerow" id="titlerow"><h1 id="labTitle">EC3 + Spectrocatalysis Lab Gas Cylinder Inventory</h1></div>
+      <div class="titlerow" id="titlerow"><h1 id="labTitle">EC3+SpectroCatalytics Lab Gas Cylinder Inventory</h1></div>
       <div class="sub">
         <span id="conn"><span class="dot"></span>Connecting to the shared register…</span>
         <span id="lastupd"></span>
@@ -275,7 +275,7 @@ footer{font-size:12px;color:var(--muted);display:grid;gap:4px}
 
   <section class="gate" id="gate">
     <span class="eyebrow">Members only</span>
-    <h2 id="gateTitle">EC3 + Spectrocatalysis Lab Gas Cylinder Inventory</h2>
+    <h2 id="gateTitle">EC3+SpectroCatalytics Lab Gas Cylinder Inventory</h2>
     <p>This inventory is for lab members. Log in with your name and the lab PIN to see and update the gas cylinders.</p>
     <div><button class="btn primary" type="button" id="btnGate">Log in</button></div>
     <p class="note">Don’t have the PIN? Email <a href="mailto:ch23d405@smail.iitm.ac.in">ch23d405@smail.iitm.ac.in</a></p>
@@ -485,7 +485,7 @@ const S = {
 // ===== CONFIG: paste your Google Apps Script web app URL here =====
 const API_URL = "https://script.google.com/macros/s/AKfycbwlKmPDfzKc1-REwnYOJQFrbxhdl8VJ-nDjVKXTL9hWOBQmAPoJiq6IEthltilXY15-lA/exec";
 const POLL_MS = 20000;
-const DEFAULT_TITLE = "EC3 + Spectrocatalysis Lab Gas Cylinder Inventory";
+const DEFAULT_TITLE = "EC3+SpectroCatalytics Lab Gas Cylinder Inventory";
 // ==================================================================
 const LOCK_SVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>';
 const OPEN_SVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 4.9-.7"/></svg>';
@@ -707,7 +707,7 @@ function renderIdentity(){
   }
 
 function renderTitle(){
-  const t = (S.meta.title && !["Gas Cylinder Status","EC3+Spectrocatalysis Group's Lab Inventory"].includes(S.meta.title)) ? S.meta.title : DEFAULT_TITLE;
+  const t = (S.meta.title && !["Gas Cylinder Status","EC3+Spectrocatalysis Group's Lab Inventory","EC3 + Spectrocatalysis Lab Gas Cylinder Inventory"].includes(S.meta.title)) ? S.meta.title : DEFAULT_TITLE;
   if (!$("labTitleInput")) $("labTitle").textContent = t;
   document.title = t;
   const gt = $("gateTitle"); if (gt) gt.textContent = t;
