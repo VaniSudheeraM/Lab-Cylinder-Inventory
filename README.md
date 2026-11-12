@@ -34,6 +34,7 @@ Your name is saved with every change you make, so use your real name. If the PIN
 - **Live · updated …:** the board refreshes by itself about every 20 seconds, so changes by others appear without reloading.
 - **Who's here:** shows which lab members have the board open right now.
 - **Editing as … / Log out:** who you're logged in as.
+- **Auto / Light / Dark:** switches the page between light and dark. **Auto** follows your phone or computer's setting. Each browser remembers its own choice.
 - **Buttons:**
   - **Add cylinder:** register a new cylinder.
   - **Request cylinders:** ask for gas to be ordered.

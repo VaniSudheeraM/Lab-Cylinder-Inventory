@@ -621,7 +621,13 @@ const dbShim = {
   }; } }),
   doc: () => ({ set: data => api("meta", {data:{title:data.title}}).then(afterWrite) }),
 };
-function afterWrite(j){ if (j && j.snapshot) applySnapshot(j.snapshot); }
+// After a save the script sends back the fresh data; show it straight away instead of waiting for the next refresh
+function afterWrite(j){
+  const snap = j && (j.snapshot || (j.cylinders ? j : null));
+  if (!snap) return;
+  try { lsSet("cyl-snap", JSON.stringify(snap)); } catch {}
+  applySnapshot(snap);
+}
 
 function toast(msg){ const t=$("toast"); t.textContent=msg; t.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true,2600); }
 
@@ -1033,7 +1039,7 @@ applyTheme(currentTheme());
 function openPin(){ $("p_pin").value=""; $("p_name").value=S.myName||""; $("p_err").hidden=true; $("dlgPin").showModal(); setTimeout(()=>$(S.myName?"p_pin":"p_name").focus(),0); }
 function setLocked(){ document.body.classList.toggle("locked", !unlocked()); }
 function lockNow(){
-  lsSet("cyl-pin", null);
+  lsSet("cyl-pin", null); lsSet("cyl-snap", null);   // don't leave the full list on a shared computer
   S.cyls = new Map(); S.reqs = new Map(); S.here = []; S.loaded = false; settled = false; clearTimeout(pollT);
   setLocked(); $("conn").innerHTML = `<span class="dot"></span>Logged out`; renderAll(); setMode();
   setTimeout(poll, 0);   // load the public summary
@@ -1168,6 +1174,7 @@ async function pollPublic(){
     const j = await callApi({action:"summary"});
     if (!j.ok) throw {code:j.code, message:j.error};
     S.meta = j.meta || {}; renderTitle(); renderPublic(j);
+    try { lsSet("cyl-pub", JSON.stringify(j)); } catch {}
     $("conn").innerHTML = `<span class="dot live"></span>Live · updated ${new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})}`;
   } catch(e){
     $("conn").innerHTML = e.code==="no_api" ? `<span class="dot warn"></span>Not set up yet.`
@@ -1179,7 +1186,7 @@ async function pollPublic(){
 
 // ---------- live sync (polling) ----------
 var settled = false;
-function applySnapshot(j){
+function applySnapshot(j, fromCache){
   const prev = S.cyls;
   const next = new Map((j.cylinders||[]).map(c => [c.id, c]));
   if (settled){
@@ -1189,7 +1196,7 @@ function applySnapshot(j){
       toast(`${c.updatedBy||"Someone"} ${was?"updated":"added"} ${c.cylNo} (${c.gas})${was && was.status!==c.status ? " → "+(ST[c.status]?.short||c.status) : ""}`); }
     else if (theirs.length > 1) toast(`${theirs.length} cylinders were just updated`);
   }
-  settled = true;
+  if (!fromCache) settled = true;
   S.cyls = next;
   S.reqs = new Map((j.requests||[]).map(r => [r.id, r]));
   S.arch = new Map((j.archive||[]).map(a => [a.id, a]));
@@ -1197,7 +1204,7 @@ function applySnapshot(j){
   S.here = j.here || [];
   const eb = {}; S.here.forEach(p => { if (p.editing && p.name !== S.myName) eb[p.editing] = p.name; }); S.editingBy = eb;
   S.loaded = true; S.offline = false;
-  $("conn").innerHTML = `<span class="dot live"></span>Live · updated ${new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})}`;
+  $("conn").innerHTML = fromCache ? `<span class="dot"></span>Showing the last saved copy · updating…` : `<span class="dot live"></span>Live · updated ${new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})}`;
   renderAll(); setMode();
 }
 var pollT, inflight = false;
@@ -1206,7 +1213,11 @@ async function poll(){
   if (inflight) return;
   if (!unlocked()){ setLocked(); return pollPublic(); }
   inflight = true;
-  try { applySnapshot(await api("list", {editing: S.editingNow || null})); }
+  try {
+    const j = await api("list", {editing: S.editingNow || null});
+    try { lsSet("cyl-snap", JSON.stringify(j)); } catch {}
+    applySnapshot(j);
+  }
   catch(e){
     if (e.code === "bad_pin"){ inflight = false; lockNow(); toast("Please log in again. The lab PIN has changed."); return; }
     S.offline = !S.loaded;
@@ -1220,7 +1231,13 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden) poll
 // ---------- boot ----------
 S.db = dbShim; S.canWrite = true; S.canAdmin = false;
 S.myName = lsGet("cyl-name") || ""; S.uid = S.myName;
-setLocked(); renderAll(); poll();
+setLocked(); renderAll();
+// Show the last copy this browser saw straight away, then refresh from Google
+try {
+  if (unlocked()){ const c = JSON.parse(lsGet("cyl-snap") || "null"); if (c && c.cylinders) applySnapshot(c, true); }
+  else { const c = JSON.parse(lsGet("cyl-pub") || "null"); if (c && c.rows){ S.meta = c.meta || {}; renderTitle(); renderPublic(c); $("conn").innerHTML = `<span class="dot"></span>Showing the last saved copy · updating…`; } }
+} catch {}
+poll();
 })();
 </script>
 
