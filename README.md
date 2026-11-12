@@ -9,6 +9,15 @@ A shared, live board of the lab's gas cylinders: what we have, where it is, what
 
 ---
 
+## Without logging in (QR code)
+
+Anyone who opens the link, for example by scanning the QR code on the lab door, sees a **public summary** without logging in:
+- **Status counts:** how many cylinders are in use, full, idle or empty.
+- **By location:** each room and corridor spot with its gases and how many of each status.
+- **Gas availability:** every gas with its full, in use, idle and empty counts, and a **NO SPARE** tag when there's no full cylinder left.
+
+The summary shows no cylinder numbers, names or remarks. To see those or make changes, click **Members: log in**.
+
 ## Logging in
 
 1. Open the board link and click **Log in**.
@@ -63,6 +72,21 @@ Every cylinder, with its number, gas, purity, size (**B** = big, **S** = small),
 - A **✎ name** tag on a row means someone else has that cylinder open right now.
 - Rows that someone else just changed **light up briefly**.
 
+### Sending a cylinder out (return or refill)
+When a cylinder leaves the lab, don't delete it. Send it out so there's a record:
+1. Click **Send out** on an empty cylinder's row, or **Send out…** in any cylinder's Edit window.
+2. Choose:
+   - **Return to supplier:** it goes back for good, e.g. a rented cylinder that's finished.
+   - **Send for refill:** it will come back.
+3. Add the date, supplier and challan/reference number if you have one, then click **Send out**.
+
+The cylinder leaves the register and the totals, and moves to the **Archive**.
+
+### Archive
+- **Out for refill:** cylinders at the supplier being refilled. When one comes back, click **Back from refill**, choose where it's kept, and it returns to the register as **Full**.
+- **History:** every cylinder that was returned or refilled, with dates, supplier, challan number and who sent it.
+- **Download CSV** saves the archive as a file to open in Excel.
+
 ### Recent changes
 The last 8 updates: who changed which cylinder, its new status, and when.
 
@@ -82,6 +106,7 @@ Every request ever made, with its status and dates. **Download CSV** saves it as
 
 ## Good habits
 - **Update the status when you change something.** For example, when you connect a full cylinder, set it to **In use**. When it runs out, set it to **Empty**.
+- **Cylinder leaving the lab?** Use **Send out**, not Delete, so it's kept in the Archive. Use Delete only for entries added by mistake.
 - **Moved a cylinder?** Edit it and change its **Location**.
 - **Raise a request early** when a gas shows **NO SPARE**.
 - **Use Remarks** for anything others should know, such as "regulator faulty" or "return to supplier".

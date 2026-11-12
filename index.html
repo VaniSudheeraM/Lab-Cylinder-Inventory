@@ -237,9 +237,42 @@ footer a{color:var(--brass)}
 .gate h2{font-size:22px}
 .gate p{margin:0;color:var(--muted);max-width:60ch}
 .gate a{color:var(--brass)}
-body:not(.locked) #gate{display:none}
-body.locked .wrap > :not(header):not(#gate):not(footer){display:none!important}
-body.locked .actions, body.locked #here, body.locked #lastupd{display:none!important}
+body:not(.locked) #pub{display:none!important}
+body.locked .wrap > :not(header):not(#pub):not(footer){display:none!important}
+body.locked .actions, body.locked #here{display:none!important}
+/* public summary (shown when logged out, e.g. from the QR code) */
+.pub{display:grid;gap:20px}
+.pubbar{background:var(--surface);color:var(--ink);border-color:var(--line)}
+.pubbar b{color:var(--brass-ink)}
+.counts.static .count{cursor:default}
+.counts.static .count:hover{background:var(--surface)}
+.locgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:12px}
+.loccard{border:1px solid var(--line);border-radius:var(--r);padding:14px;display:grid;gap:9px;align-content:start;background:var(--surface)}
+.loccard.room{border-width:2px;border-color:color-mix(in srgb,var(--ink) 25%,var(--line))}
+.loccard.none{opacity:.55}
+.loccard .lt{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.loccard .ln{font:600 15px/1.2 var(--f-display)}
+.loccard .lk{font:500 10.5px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.loccard .lc{font:600 24px/1 var(--f-display);font-variant-numeric:tabular-nums}
+.sline{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12.5px;color:var(--muted)}
+.sline span{display:inline-flex;align-items:center;gap:5px}
+.sline i{width:8px;height:8px;border-radius:2px;display:inline-block}
+.sline b{color:var(--ink);font-variant-numeric:tabular-nums}
+.pubstock tbody tr{cursor:default}
+.pubstock tbody tr:hover{background:transparent}
+/* archive */
+.subh{font:500 11px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:4px 0 0}
+.akind{font:500 11px/1 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;padding:3px 6px;border-radius:3px;white-space:nowrap}
+.akind.returned{background:var(--sunk);color:var(--muted)}
+.akind.out{background:var(--s-use-bg);color:var(--s-use)}
+.akind.back{background:var(--s-full-bg);color:var(--s-full)}
+.c-edit .cbtns{display:inline-flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.optrow{display:grid;gap:8px}
+.opt{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;cursor:pointer}
+.opt:has(input:checked){border-color:var(--brass);background:var(--brass-weak)}
+.opt input{margin-top:3px;accent-color:var(--brass)}
+.opt b{display:block}
+.opt span{font-size:12.5px;color:var(--muted)}
 .credits{padding-top:8px;margin-top:4px;border-top:1px solid var(--line)}
 footer{font-size:12px;color:var(--muted);display:grid;gap:4px}
 @media (prefers-reduced-motion:no-preference){.zone,.count,.btn{transition:background-color .12s,border-color .12s}}
@@ -273,12 +306,24 @@ footer{font-size:12px;color:var(--muted);display:grid;gap:4px}
     </div>
   </header>
 
-  <section class="gate" id="gate">
-    <span class="eyebrow">Members only</span>
-    <h2 id="gateTitle">EC3+SpectroCatalytics Lab Gas Cylinder Inventory</h2>
-    <p>This inventory is for lab members. Log in with your name and the lab PIN to see and update the gas cylinders.</p>
-    <div><button class="btn primary" type="button" id="btnGate">Log in</button></div>
-    <p class="note">Don’t have the PIN? Email <a href="mailto:ch23d405@smail.iitm.ac.in">ch23d405@smail.iitm.ac.in</a></p>
+  <section class="pub" id="pub" aria-label="Public summary">
+    <div class="banner pubbar"><span><b>Public summary.</b> Anyone can see what gas we have and where. Lab members log in to see every cylinder, update statuses and raise requests.</span><button class="btn small primary" type="button" id="btnGate">Members: log in</button></div>
+    <div class="counts static" id="pubCounts" aria-label="Cylinder counts by status"></div>
+    <section class="panel">
+      <div class="phead"><h2>By location</h2><span class="note" id="pubRefill"></span></div>
+      <div class="locgrid" id="pubLocs"><div class="empty-state">Loading…</div></div>
+    </section>
+    <section class="panel">
+      <div class="phead"><h2>Gas availability</h2><span class="note">Full = spare, ready to connect</span></div>
+      <div class="tablebox">
+        <table class="stock pubstock">
+          <thead><tr><th>Gas</th><th class="num">Full</th><th class="num">In use</th><th class="num">Idle</th><th class="num">Empty</th><th class="num">Total</th></tr></thead>
+          <tbody id="pubGas"></tbody>
+        </table>
+      </div>
+      <p class="note" style="margin:0"><span class="flag" style="margin:0">No spare</span> means that gas is in use and there is no full cylinder left. Hazard groups are guessed from the gas name; always check the cylinder label and SDS.</p>
+    </section>
+    <p class="note" style="margin:0">Lab member without the PIN? Email <a href="mailto:ch23d405@smail.iitm.ac.in" style="color:var(--brass)">ch23d405@smail.iitm.ac.in</a></p>
   </section>
 
   <section class="counts" id="counts" aria-label="Cylinder counts by status"></section>
@@ -352,6 +397,20 @@ footer{font-size:12px;color:var(--muted);display:grid;gap:4px}
       </div>
     </section>
   </div>
+  <div>
+    <section class="panel">
+      <div class="phead"><h2>Archive</h2><span class="note">Cylinders returned to the supplier or sent for refill. They no longer count in the totals.</span><button class="btn small" type="button" id="btnArchCsv">Download CSV</button></div>
+      <p class="subh" id="refillHead">Out for refill</p>
+      <div class="req" id="refillList"></div>
+      <p class="subh">History</p>
+      <div class="tablebox" style="max-height:380px">
+        <table>
+          <thead><tr><th>Cylinder</th><th>Gas</th><th>What happened</th><th>Sent</th><th>Supplier</th><th>Challan / ref</th><th>By</th><th>Back</th></tr></thead>
+          <tbody id="archBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
 
   <footer>
     <span>Changes save to the lab’s Google Sheet and show up for everyone within about 20 seconds. Hazard groups (FLAM, TOX, OXID, INERT) are guessed from the gas name; always check the cylinder label and SDS.</span>
@@ -380,7 +439,7 @@ footer{font-size:12px;color:var(--muted);display:grid;gap:4px}
     </div>
     <div class="err" id="c_err" hidden></div>
     <div class="dfoot">
-      <button class="btn danger" type="button" id="c_del">Delete</button>
+      <div class="r" style="margin-left:0"><button class="btn" type="button" id="c_out">Send out…</button><button class="btn danger" type="button" id="c_del">Delete</button></div>
       <div class="r">
         <button class="btn" type="button" id="c_cancel">Cancel</button>
         <button class="btn" type="button" id="c_another" hidden>Save &amp; add another</button>
@@ -425,6 +484,38 @@ footer{font-size:12px;color:var(--muted);display:grid;gap:4px}
   </form>
 </dialog>
 
+<dialog id="dlgOut">
+  <form id="formOut" novalidate>
+    <h2 id="o_title">Send out cylinder</h2>
+    <p class="note" style="margin:0" id="o_sub"></p>
+    <div class="optrow">
+      <label class="opt"><input type="radio" name="o_kind" id="o_ret" value="Returned"><div><b>Return to supplier</b><span>The cylinder goes back for good, e.g. a rented cylinder that is empty.</span></div></label>
+      <label class="opt"><input type="radio" name="o_kind" id="o_ref" value="Refill"><div><b>Send for refill</b><span>It will come back. It waits under “Out for refill” until you mark it back.</span></div></label>
+    </div>
+    <div class="fgrid">
+      <label class="f">Date sent<input id="o_date" type="date"></label>
+      <label class="f">Supplier<input id="o_sup" list="dlSup" autocomplete="off"></label>
+      <label class="f full">Challan / reference no.<input id="o_refno" autocomplete="off" placeholder="Optional"></label>
+      <label class="f full">Note<input id="o_note" autocomplete="off" placeholder="Optional, e.g. valve leaking"></label>
+    </div>
+    <p class="note" style="margin:0">It leaves the register and the totals, and is kept in the Archive.</p>
+    <div class="err" id="o_err" hidden></div>
+    <div class="dfoot"><div class="r"><button class="btn" type="button" id="o_cancel">Cancel</button><button class="btn primary" type="submit" id="o_go">Send out</button></div></div>
+  </form>
+</dialog>
+<dialog id="dlgBack">
+  <form id="formBack" novalidate>
+    <h2 id="b_title">Back from refill</h2>
+    <p class="note" style="margin:0" id="b_sub"></p>
+    <div class="fgrid">
+      <label class="f">Date back<input id="b_date" type="date"></label>
+      <label class="f">Put it at<input id="b_loc" list="dlLoc" autocomplete="off"></label>
+    </div>
+    <p class="note" style="margin:0">It goes back into the register as <b>Full</b>.</p>
+    <div class="err" id="b_err" hidden></div>
+    <div class="dfoot"><div class="r"><button class="btn" type="button" id="b_cancel">Cancel</button><button class="btn primary" type="submit">Add back to register</button></div></div>
+  </form>
+</dialog>
 <dialog id="dlgPin">
   <form id="formPin" novalidate>
     <h2>Lab PIN</h2>
@@ -476,6 +567,7 @@ function hazard(g){
 
 // ---------- state ----------
 const S = {
+  arch: new Map(), pub: null,
   cyls: new Map(), reqs: new Map(), meta: {}, loaded:false, canWrite:false, canAdmin:false, uid:null, myName:"",
   f: {q:"", status:"", loc:"", gas:"", own:"", sup:"", line:""},
   sort: {key:"location", dir:1},
@@ -640,7 +732,7 @@ async function renderRegister(){
       <td class="hide-m wrapcell">${esc(c.user)}${c.remarks?`<div class="note">${esc(c.remarks)}</div>`:""}</td>
       <td class="hide-m who">${esc(fmtDate(c.updated))}${esc(who)}</td>
       <td class="c-meta">${[c.purity, c.size, c.location, c.connected?"connected":"not connected", c.own, c.supplier, c.user, c.remarks].filter(Boolean).map(esc).join(" · ")}</td>
-      <td class="c-edit"><button type="button" class="btn small" data-edit="${c.id}">${w?"Edit":"View"}</button></td>
+      <td class="c-edit"><span class="cbtns">${w && c.status==="Empty" ? `<button type="button" class="btn small" data-out="${c.id}">Send out</button>` : ""}<button type="button" class="btn small" data-edit="${c.id}">${w?"Edit":"View"}</button></span></td>
     </tr>`;
   }).join("");
 }
@@ -712,7 +804,7 @@ function renderTitle(){
   document.title = t;
   const gt = $("gateTitle"); if (gt) gt.textContent = t;
 }
-function renderAll(){ renderTitle(); renderCounts(); renderPlan(); renderStock(); fillOptions(); renderActiveFilters(); renderRegister(); renderRequests(); renderActivity(); renderIdentity();
+function renderAll(){ renderTitle(); renderArchive(); renderCounts(); renderPlan(); renderStock(); fillOptions(); renderActiveFilters(); renderRegister(); renderRequests(); renderActivity(); renderIdentity();
   document.querySelectorAll("[data-w]").forEach(b => b.hidden = !editable()); }
 
 // ---------- interactions ----------
@@ -765,7 +857,7 @@ function openCyl(id, preset){
   document.querySelectorAll('input[name=c_st]').forEach(r=>r.checked = r.value===(c.status||"Full"));
   const nm = c.updatedBy && S.profiles[c.updatedBy]?.name;
   $("dlgCylWho").textContent = id && c.updated ? `Updated ${fmtDate(c.updated)}${nm?" by "+nm:""}` : "";
-  $("c_del").hidden = !id || !editable(); $("c_del").textContent="Delete";
+  $("c_del").hidden = !id || !editable(); $("c_del").textContent="Delete"; $("c_out").hidden = !id || !editable();
   $("c_another").hidden = !!id || !editable(); $("c_save").hidden = !editable();
   $("formCyl").querySelectorAll("input,select").forEach(el=>el.disabled=!editable());
   $("c_cancel").textContent = editable() ? "Cancel" : "Close";
@@ -944,6 +1036,7 @@ function lockNow(){
   lsSet("cyl-pin", null);
   S.cyls = new Map(); S.reqs = new Map(); S.here = []; S.loaded = false; settled = false; clearTimeout(pollT);
   setLocked(); $("conn").innerHTML = `<span class="dot"></span>Logged out`; renderAll(); setMode();
+  setTimeout(poll, 0);   // load the public summary
 }
 $("btnLock").addEventListener("click", () => { if (unlocked()){ lockNow(); toast("Logged out on this browser"); } else openPin(); });
 $("btnGate").addEventListener("click", openPin);
@@ -964,6 +1057,126 @@ $("formPin").addEventListener("submit", async e => {
 function sayEditing(id){ S.editingNow = id || null; }
 $("dlgCyl").addEventListener("close", () => sayEditing(null));
 
+// ---------- archive ----------
+const KIND_LABEL = a => a.kind === "Refill" ? (a.state === "back" ? "Refilled · back" : "Out for refill") : "Returned to supplier";
+const KIND_CLS = a => a.kind === "Refill" ? (a.state === "back" ? "back" : "out") : "returned";
+function archList(){ return [...S.arch.values()].sort((a,b) => String(b.sentOn).localeCompare(String(a.sentOn)) || String(b.id).localeCompare(String(a.id))); }
+function renderArchive(){
+  const all = archList(), out = all.filter(a => a.kind === "Refill" && a.state === "out"), w = editable();
+  $("refillHead").textContent = `Out for refill${out.length ? " · " + out.length : ""}`;
+  $("refillList").innerHTML = out.length ? out.map(a => `<div class="reqitem">
+      <div class="rt"><b><span class="mono">${esc(a.cylNo)}</span> · ${esc(a.gas)}${a.purity?` <span class="mono muted">${esc(a.purity)}</span>`:""}${a.size?` <span class="size">${esc(a.size)}</span>`:""}</b><span class="akind out">Out for refill</span></div>
+      <div class="note">${[a.sentOn && "Sent " + fmtDate(a.sentOn), a.supplier, a.ref && "Ref " + a.ref, a.sentBy && "by " + a.sentBy, a.fromLocation && "from " + a.fromLocation].filter(Boolean).map(esc).join(" · ")}${a.note?`<br>${esc(a.note)}`:""}</div>
+      ${w ? `<div class="ract"><button class="btn small" type="button" data-back="${esc(a.id)}">Back from refill</button></div>` : ""}
+    </div>`).join("") : `<div class="empty-state">${S.loaded ? "Nothing out for refill right now." : "Loading…"}</div>`;
+  $("archBody").innerHTML = all.length ? all.map(a => `<tr>
+      <td class="mono">${esc(a.cylNo)}</td><td><b>${esc(a.gas)}</b>${a.purity?` <span class="mono muted">${esc(a.purity)}</span>`:""}</td>
+      <td><span class="akind ${KIND_CLS(a)}">${esc(KIND_LABEL(a))}</span>${a.note?`<div class="note">${esc(a.note)}</div>`:""}</td>
+      <td class="who">${esc(fmtDate(a.sentOn))}</td><td class="mono">${esc(a.supplier)}</td><td class="mono">${esc(a.ref)}</td><td>${esc(a.sentBy)}</td>
+      <td class="who">${a.backOn ? esc(fmtDate(a.backOn)) + (a.backBy ? " · " + esc(a.backBy) : "") : ""}</td></tr>`).join("")
+    : `<tr><td colspan="8"><div class="empty-state">When an empty cylinder is returned or sent for refill, it is recorded here.</div></td></tr>`;
+}
+$("btnArchCsv").addEventListener("click", () => {
+  offer(`cylinder-archive-${today()}.csv`, [["Cylinder no","Gas","Purity","Size","Rent/own","What happened","Sent on","Supplier","Challan / ref","Note","Sent by","From location","Back on","Back by","Back to"],
+    ...archList().map(a => [a.cylNo,a.gas,a.purity,a.size,a.own,KIND_LABEL(a),a.sentOn,a.supplier,a.ref,a.note,a.sentBy,a.fromLocation,a.backOn,a.backBy,a.backLocation])].map(r=>r.map(csvCell).join(",")).join("\n"));
+});
+
+let outId = null;
+function openOut(id){
+  const c = S.cyls.get(id); if (!c) return;
+  outId = id;
+  $("o_title").textContent = `Send out ${c.cylNo}`;
+  $("o_sub").textContent = [c.gas, c.purity, c.location, c.status, c.own].filter(Boolean).join(" · ");
+  const refill = (c.own||"").toLowerCase() === "own";
+  $("o_ret").checked = !refill; $("o_ref").checked = refill;
+  $("o_date").value = today(); $("o_sup").value = c.supplier || ""; $("o_refno").value = ""; $("o_note").value = "";
+  $("o_err").hidden = true; $("o_go").disabled = false;
+  $("dlgOut").showModal();
+}
+$("c_out").addEventListener("click", () => { const id = S.editing; $("dlgCyl").close(); openOut(id); });
+$("o_cancel").addEventListener("click", () => $("dlgOut").close());
+$("formOut").addEventListener("submit", async e => {
+  e.preventDefault();
+  const kind = (document.querySelector('input[name=o_kind]:checked')||{}).value;
+  if (!kind){ $("o_err").textContent = "Choose return to supplier or send for refill."; $("o_err").hidden = false; return; }
+  const c = S.cyls.get(outId); $("o_go").disabled = true;
+  try {
+    afterWrite(await api("sendOut", {id: outId, kind, date: $("o_date").value || today(), supplier: norm($("o_sup").value).toUpperCase(), ref: norm($("o_refno").value), note: norm($("o_note").value)}));
+    $("dlgOut").close();
+    toast(kind === "Refill" ? `${c ? c.cylNo : "Cylinder"} marked as sent for refill` : `${c ? c.cylNo : "Cylinder"} marked as returned to the supplier`);
+  } catch(err){ $("o_go").disabled = false; handleWriteErr(err); }
+});
+
+let backId = null;
+function openBack(id){
+  const a = S.arch.get(id); if (!a) return;
+  backId = id;
+  $("b_title").textContent = `${a.cylNo} back from refill`;
+  $("b_sub").textContent = [a.gas, a.purity, a.supplier, a.sentOn && "sent " + fmtDate(a.sentOn)].filter(Boolean).join(" · ");
+  $("b_date").value = today(); $("b_loc").value = a.fromLocation || ""; $("b_err").hidden = true;
+  $("dlgBack").showModal();
+}
+$("b_cancel").addEventListener("click", () => $("dlgBack").close());
+$("formBack").addEventListener("submit", async e => {
+  e.preventDefault();
+  const loc = norm($("b_loc").value);
+  if (!loc){ $("b_err").textContent = "Say where the cylinder is now."; $("b_err").hidden = false; return; }
+  try { afterWrite(await api("backFromRefill", {archId: backId, location: loc, date: $("b_date").value || today()})); $("dlgBack").close(); toast("Back in the register as Full"); }
+  catch(err){ handleWriteErr(err); }
+});
+document.addEventListener("click", e => {
+  const o = e.target.closest("[data-out]"); if (o) return openOut(o.dataset.out);
+  const b = e.target.closest("[data-back]"); if (b) return openBack(b.dataset.back);
+});
+
+// ---------- public summary (logged out, e.g. from the QR code) ----------
+function renderPublic(j){
+  const rows = j.rows || [];
+  const tot = {all:0}; STATUSES.forEach(s => tot[s.key] = 0);
+  rows.forEach(r => { tot.all += r.n; tot[r.status] = (tot[r.status]||0) + r.n; });
+  $("pubCounts").innerHTML = [{k:"all", label:"All cylinders", color:"var(--ink)"}, ...STATUSES.map(s => ({k:s.key, label:s.short||s.key, color:s.color}))]
+    .map(c => `<div class="count" style="--k:${c.color}"><span class="n">${tot[c.k]||0}</span><span class="l"><span class="sw"></span>${esc(c.label)}</span></div>`).join("");
+  // by location: known spots first (in map order), then anything else
+  const byLoc = new Map();
+  ZONES.forEach(z => byLoc.set(z.id, {label:z.label, room:!!z.room, kind: z.room ? "Inside room" : "Corridor", rows:[]}));
+  rows.forEach(r => { const id = locId(r.location); if (!byLoc.has(id)) byLoc.set(id, {label: norm(r.location)||"No location", kind:"Other", rows:[]}); byLoc.get(id).rows.push(r); });
+  $("pubLocs").innerHTML = [...byLoc.values()].map(L => {
+    const n = L.rows.reduce((a,r)=>a+r.n,0);
+    const st = {}; L.rows.forEach(r => st[r.status] = (st[r.status]||0) + r.n);
+    const gases = {}; L.rows.forEach(r => { const g = norm(r.gas)||"?"; gases[g] = (gases[g]||0) + r.n; });
+    const bar = STATUSES.map(s => st[s.key] ? `<i style="width:${st[s.key]/n*100}%;background:${s.color}"></i>` : "").join("");
+    const line = STATUSES.filter(s => st[s.key]).map(s => `<span><i style="background:${s.color}"></i>${esc(s.short||s.key)} <b>${st[s.key]}</b></span>`).join("");
+    const chips = Object.entries(gases).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).map(([g,k]) => `<span class="chip">${esc(g)}${k>1?` ×${k}`:""}</span>`).join("");
+    return `<div class="loccard ${L.room?"room":""} ${n?"":"none"}">
+      <div class="lt"><div><div class="lk">${esc(L.kind)}</div><div class="ln">${esc(L.label)}</div></div><span class="lc">${n}</span></div>
+      ${n ? `<span class="bar">${bar}</span><div class="sline">${line}</div><div class="chips">${chips}</div>` : `<span class="note">No cylinders here</span>`}</div>`;
+  }).join("");
+  // by gas
+  const g = {};
+  rows.forEach(r => { const k = gasKey(r.gas)||"?"; (g[k] ||= {label:norm(r.gas), total:0}); g[k][r.status] = (g[k][r.status]||0) + r.n; g[k].total += r.n; });
+  const cell = v => v ? `<td class="num">${v}</td>` : `<td class="num z">0</td>`;
+  const gr = Object.values(g).sort((a,b) => a.label.localeCompare(b.label, undefined, {numeric:true}));
+  $("pubGas").innerHTML = gr.length ? gr.map(r => { const [hc,hl] = hazard(r.label); const flag = (r["In use"]||0)>0 && !(r.Full||0) ? `<span class="flag">No spare</span>` : "";
+    return `<tr><td><b>${esc(r.label)}</b> <span class="hz ${hc}">${hl}</span>${flag}</td>${cell(r.Full)}${cell(r["In use"])}${cell(r["Not in use"])}${cell(r.Empty)}<td class="num"><b>${r.total}</b></td></tr>`; }).join("")
+    : `<tr><td colspan="6"><div class="empty-state">No cylinders listed.</div></td></tr>`;
+  $("pubRefill").textContent = j.outForRefill ? `${j.outForRefill} more cylinder${j.outForRefill>1?"s are":" is"} out for refill` : "Where each cylinder is kept";
+  $("lastupd").textContent = j.lastChange ? `Last change ${fmtDate(String(j.lastChange).slice(0,10))}` : "";
+}
+async function pollPublic(){
+  inflight = true;
+  try {
+    const j = await callApi({action:"summary"});
+    if (!j.ok) throw {code:j.code, message:j.error};
+    S.meta = j.meta || {}; renderTitle(); renderPublic(j);
+    $("conn").innerHTML = `<span class="dot live"></span>Live · updated ${new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})}`;
+  } catch(e){
+    $("conn").innerHTML = e.code==="no_api" ? `<span class="dot warn"></span>Not set up yet.`
+      : e.code==="bad_pin" ? `<span class="dot warn"></span>The public summary needs the updated Google script.`
+      : `<span class="dot warn"></span>Can’t reach the register right now. Retrying… <span class="note">(${esc(e.message||e.code||"")})</span>`;
+    if (!$("pubLocs").querySelector(".loccard")) $("pubLocs").innerHTML = `<div class="empty-state">Couldn’t load the summary yet.</div>`;
+  } finally { inflight = false; if (!document.hidden && !unlocked()) pollT = setTimeout(poll, POLL_MS); }
+}
+
 // ---------- live sync (polling) ----------
 var settled = false;
 function applySnapshot(j){
@@ -979,6 +1192,7 @@ function applySnapshot(j){
   settled = true;
   S.cyls = next;
   S.reqs = new Map((j.requests||[]).map(r => [r.id, r]));
+  S.arch = new Map((j.archive||[]).map(a => [a.id, a]));
   S.meta = j.meta || {}; S.metaLoaded = true;
   S.here = j.here || [];
   const eb = {}; S.here.forEach(p => { if (p.editing && p.name !== S.myName) eb[p.editing] = p.name; }); S.editingBy = eb;
@@ -989,8 +1203,9 @@ function applySnapshot(j){
 var pollT, inflight = false;
 async function poll(){
   clearTimeout(pollT);
-  if (!unlocked()){ setLocked(); $("conn").innerHTML = `<span class="dot"></span>Log in to see the register`; return; }
-  if (inflight) return; inflight = true;
+  if (inflight) return;
+  if (!unlocked()){ setLocked(); return pollPublic(); }
+  inflight = true;
   try { applySnapshot(await api("list", {editing: S.editingNow || null})); }
   catch(e){
     if (e.code === "bad_pin"){ inflight = false; lockNow(); toast("Please log in again. The lab PIN has changed."); return; }
